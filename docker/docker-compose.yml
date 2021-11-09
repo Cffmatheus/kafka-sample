@@ -1,0 +1,44 @@
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - custom
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.0
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+#      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_BROKER_ID: 1
+      KAFKA_CREATE_TOPICS: "test"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,SSL://localhost:9093
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_SSL_CLIENT_AUTH: "required"
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ''
+      KAFKA_SSL_KEYSTORE_FILENAME: '/certs/kafka01.keystore.jks'
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: '/certs/kafka_keystore_credentials'
+      KAFKA_SSL_KEY_CREDENTIALS: '/certs/kafka_sslkey_credentials'
+      KAFKA_SSL_TRUSTSTORE_FILENAME: '/certs/kafka.truststore.jks'
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: '/certs/kafka_truststore_credentials'
+    volumes:
+      - ./certs/:/etc/kafka/secrets/certs
+    depends_on:
+      - zookeeper
+    networks:
+      - custom
+
+networks:
+  custom:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.167.60.0/16
