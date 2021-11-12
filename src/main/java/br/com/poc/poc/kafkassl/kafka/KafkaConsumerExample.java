@@ -1,33 +1,24 @@
 package br.com.poc.poc.kafkassl.kafka;
 
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+import java.util.concurrent.CountDownLatch;
 
-import java.util.Arrays;
-import java.util.Properties;
-
+@Component
 public class KafkaConsumerExample {
 
-    static final String topic = "test";
-    static final String group = "test_group";
+    private final CountDownLatch latch = new CountDownLatch(3);
 
-    public static void main(String[] args) {
+    private static final Logger log = LoggerFactory.getLogger(KafkaConsumerExample.class);
 
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
-        props.put("group.id", group);
-        props.put("auto.commit.interval.ms", "1000");
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props)) {
-            consumer.subscribe(Arrays.asList(topic));
-
-            for (int i = 0; i < 500; i ++) {
-                ConsumerRecords<String, String> records = consumer.poll(1000L);
-                System.out.println("Size " +records.count());
-            }
-        }
-        System.out.println("END");
+    @KafkaListener(topics = "test")
+    public void listen(ConsumerRecord<?, ?> cr) {
+        log.info(cr.toString());
+        latch.countDown();
     }
+
+
 }
